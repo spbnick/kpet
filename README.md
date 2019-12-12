@@ -150,6 +150,8 @@ Each case is an object with the following attributes:
 Each test is an object with the following attributes:
 
 * `name`: Name of the test.
+* `universal_id`: Universally-recognized ID of the test.
+  E.g. a [KCIDB](https://github.com/kernelci/kcidb/) test ID.
 * `origin`: The name of a test origin - the source for the test's code.
   One of the keys from the `origins` dictionary in the database's top
   `index.yaml` file. Undefined, if the latter is not defined. Examples:
