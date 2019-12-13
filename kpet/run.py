@@ -18,49 +18,6 @@ from lxml import etree
 from kpet import data
 
 
-class Case:
-    # pylint: disable=too-few-public-methods,too-many-instance-attributes
-    """A test case run"""
-    def __init__(self, case):
-        """
-        Initialize a test case run.
-
-        Args:
-            case:          The test cases to run.
-        """
-        exported_attributes = ["name", "max_duration_seconds", "hostRequires",
-                               "partitions", "kickstart", "waived", "role",
-                               "environment", "maintainers"]
-
-        for attr in exported_attributes:
-            setattr(self, attr, getattr(case, attr))
-
-
-class Suite:
-    # pylint: disable=too-few-public-methods,too-many-instance-attributes
-    """A test suite run"""
-
-    def __init__(self, suite, cases):
-        """
-        Initialize a test suite run.
-
-        Args:
-            suite:          The suite to run.
-            cases:          List of the suite's cases to run (kpet.run.Case
-                            objects).
-        """
-        assert isinstance(suite, data.Suite)
-        assert isinstance(cases, list)
-
-        exported_attributes = ["name",
-                               "hostRequires", "partitions",
-                               "kickstart", "maintainers", "origin",
-                               "location", "waived"]
-        for attr in exported_attributes:
-            setattr(self, attr, getattr(suite, attr))
-        self.cases = cases
-
-
 class Test:
     # pylint: disable=too-few-public-methods, too-many-instance-attributes
     """A test run - an execution of a particular case of a test suite"""
@@ -137,8 +94,6 @@ class Host:
         self.tasks = type.tasks
 
         # Collect host parameters and create "suite" and "test" lists
-        # TODO: Remove suite list once database transitions to "tests"
-        self.suites = list()
         self.tests = list()
         hostRequires_list = [type.hostRequires]
         partitions_list = [type.partitions]
@@ -152,8 +107,6 @@ class Host:
                 partitions_list.append(case.partitions)
                 kickstart_list.append(case.kickstart)
                 self.tests.append(Test(suite, case))
-            # TODO: Remove suite list once database transitions to "tests"
-            self.suites.append(Suite(suite, [Case(c) for c in cases]))
 
         # Remove undefined template paths
         self.hostRequires_list = filter(lambda e: e is not None,
@@ -164,9 +117,6 @@ class Host:
                                      kickstart_list)
 
         # Put waived tests at the end
-        # TODO: Remove suite list once database transitions to "tests"
-        self.suites.sort(key=lambda suite: len([case for case in suite.cases
-                                                if case.waived]))
         self.tests.sort(key=lambda t: t.waived)
 
 
@@ -188,7 +138,7 @@ class Base:     # pylint: disable=too-few-public-methods
 
         Returns:
             A list of recipesets - host synchronization domains - lists which
-            contain hosts with suites and their cases to be executed on them.
+            contain hosts with tests to be executed on them.
         """
         assert isinstance(database, data.Base)
         assert isinstance(target, data.Target)
@@ -273,7 +223,7 @@ class Base:     # pylint: disable=too-few-public-methods
                         included into the run. None if all suites and cases
                         should be included, regardless if members or not.
         Returns:
-            A list of Host instances with suite runs assigned to them
+            A list of Host instances with test runs assigned to them
         """
         assert isinstance(database, data.Base)
         assert isinstance(target, data.Target)
